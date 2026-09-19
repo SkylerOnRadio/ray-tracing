@@ -1,3 +1,4 @@
+#include "colour.h"
 #include <iostream>
 
 int main() {
@@ -11,15 +12,9 @@ int main() {
     std::clog << "\rScanlines remaining: " << (img_height - j) << ' '
               << std::flush;
     for (int i = 0; i < img_width; ++i) {
-      double r = double(i) / (img_width - 1);
-      double g = double(j) / (img_height - 1);
-      double b = 0.0;
-
-      int ir = int(255.999 * r);
-      int ig = int(255.999 * g);
-      int ib = int(255.999 * b);
-
-      std::cout << ir << ' ' << ig << ' ' << ib << '\n';
+      auto pixel_color =
+          color(double(i) / (img_width - 1), double(j) / (img_height - 1), 0);
+      write_color(std::cout, pixel_color);
     }
   }
 
