@@ -1,3 +1,3 @@
 project(renderer)
 
-add_executable(renderer renderer.cpp)
+add_executable(renderer main.cpp)

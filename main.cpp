@@ -1,27 +1,17 @@
 #include "colour.h"
+#include "hittable.h"
+#include "hittableList.h"
+#include "interval.h"
 #include "ray.h"
+#include "sphere.h"
+#include "utility.h"
 #include "vec3.h"
-#include <cmath>
 #include <iostream>
 
-double hit_sphere(const point3 &center, double radius, const ray &r) {
-  vec3 oc = center - r.origin();
-  auto a = r.direction().lenght_squared();
-  auto h = dot(r.direction(), oc);
-  auto c = oc.lenght_squared() - radius * radius;
-
-  auto discriminant = h * h - a * c;
-  if (discriminant < 0)
-    return -1.0;
-  else
-    return (h - std::sqrt(discriminant)) / (a); // 1 or 2 real roots
-}
-
-color ray_color(const ray &r) {
-  auto t = hit_sphere(point3(0, 0, -1), .5, r);
-  if (t > 0.0) {
-    vec3 N = unit_vector(r.at(t) - vec3(0, 0, -1));
-    return .5 * color(N.x() + 1, N.y() + 1, N.z() + 1);
+color ray_color(const ray &r, const hittable &world) {
+  hit_record rec;
+  if (world.hit(r, interval(0, infinity), rec)) {
+    return .5 * (rec.normal + color(1, 1, 1));
   }
 
   vec3 unit_dir = unit_vector(r.direction());
@@ -35,6 +25,11 @@ int main() {
 
   int img_height = int(img_width / aspect_ratio);
   img_height = (img_height < 1) ? 1 : img_height;
+
+  hittable_list world;
+
+  world.add(make_shared<sphere>(point3(0, 0, -1), 0.5));
+  world.add(make_shared<sphere>(point3(0, -100.5, -1), 100));
 
   auto focal_length = 1.0;
   auto viewport_height = 2.0;
@@ -67,7 +62,7 @@ int main() {
       auto ray_direction = pixel_center - camera_center;
       ray r(camera_center, ray_direction);
 
-      color pixel_color = ray_color(r);
+      color pixel_color = ray_color(r, world);
       write_color(std::cout, pixel_color);
     }
   }
