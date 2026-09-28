@@ -1,7 +1,5 @@
 #include "camera.h"
-#include "colour.h"
 #include "hittableList.h"
-#include "ray.h"
 #include "sphere.h"
 #include "utility.h"
 #include "vec3.h"
@@ -16,6 +14,7 @@ int main() {
 
   cam.aspect_ratio = 16.0 / 9.0;
   cam.image_width = 400;
+  cam.samples_per_pixel = 100;
 
   cam.render(world);
 
