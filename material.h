@@ -65,8 +65,7 @@ public:
     double cos_theta = std::fmin(dot(-unit_dir, rec.normal), 1.0);
     double sin_theta = std::sqrt(1.0 - cos_theta * cos_theta);
 
-    bool cannot_refract =
-        rec.front_face ? (1.0 / refraction_index) : refraction_index;
+    bool cannot_refract = ri * sin_theta > 1.0;
     vec3 dir;
 
     if (cannot_refract) {
@@ -81,6 +80,12 @@ public:
 
 private:
   double refraction_index;
+
+  static double reflectance(double cosine, double refraction_index) {
+    auto r0 = (1 - refraction_index) / (1 + refraction_index);
+    r0 = r0 * r0;
+    return r0 + (1 - r0) * pow((1 - cosine), 5);
+  }
 };
 
 #endif // !MATERAIL_H
