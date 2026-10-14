@@ -4,6 +4,7 @@
 #include "colour.h"
 #include "hittable.h"
 #include "vec3.h"
+#include <cmath>
 class material {
 public:
   virtual ~material() = default;
@@ -61,8 +62,20 @@ public:
     double ri = rec.front_face ? (1.0 / refraction_index) : refraction_index;
 
     vec3 unit_dir = unit_vector(r_in.direction());
-    vec3 refracted = refract(unit_dir, rec.normal, ri);
-    scattered = ray(rec.p, refracted);
+    double cos_theta = std::fmin(dot(-unit_dir, rec.normal), 1.0);
+    double sin_theta = std::sqrt(1.0 - cos_theta * cos_theta);
+
+    bool cannot_refract =
+        rec.front_face ? (1.0 / refraction_index) : refraction_index;
+    vec3 dir;
+
+    if (cannot_refract) {
+      dir = reflect(unit_dir, rec.normal);
+    } else {
+      dir = refract(unit_dir, rec.normal, ri);
+    }
+
+    scattered = ray(rec.p, dir);
     return true;
   }
 
