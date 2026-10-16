@@ -23,6 +23,9 @@ public:
   point3 lookat = point3(0, 0, -1);
   vec3 vup = vec3(0, 1, 0);
 
+  double defocus_angle = 0;
+  double focus_dist = 10;
+
   void render(const hittable &world) {
     initialize();
 
@@ -51,6 +54,8 @@ private:
   vec3 pixel_delta_u;
   vec3 pixel_delta_v;
   vec3 u, v, w;
+  vec3 defocus_disk_u;
+  vec3 defocus_disk_v;
 
   void initialize() {
     image_height = int(image_width / aspect_ratio);
@@ -61,10 +66,9 @@ private:
     center = lookfrom;
 
     // Determine viewport dimensions
-    auto focal_length = (lookfrom - lookat).lenght();
     auto theta = degrees_to_radians(vfov);
     auto h = tan(theta / 2);
-    auto viewport_height = 2.0 * h * focal_length;
+    auto viewport_height = 2.0 * h * focus_dist;
     auto viewport_width =
         viewport_height * (double(image_width) / image_height);
 
@@ -79,19 +83,24 @@ private:
     pixel_delta_v = viewport_v / image_height;
 
     auto viewport_upper_left =
-        center - (focal_length * w) - viewport_u / 2 - viewport_v / 2;
+        center - (focus_dist * w) - viewport_u / 2 - viewport_v / 2;
     pixel00_loc = viewport_upper_left + .5 * (pixel_delta_v + pixel_delta_u);
+
+    double defocus_radius =
+        focus_dist * std::tan(degrees_to_radians(defocus_angle / 2));
+    defocus_disk_u = u * defocus_radius;
+    defocus_disk_v = v * defocus_radius;
   }
 
   ray get_ray(int i, int j) const {
-    // Construct a camera ray ariginating from the origin and directed at
+    // Construct a camera ray ariginating from the defocus disk and directed at
     // randomly sampled point around the pixel location i, j.
 
     auto offset = sample_square();
     auto pixel_sample = pixel00_loc + ((i + offset.x()) * pixel_delta_u) +
                         ((j + offset.y()) * pixel_delta_v);
 
-    auto ray_origin = center;
+    auto ray_origin = (defocus_angle <= 0) ? center : defocus_disk_sample();
     auto ray_direction = pixel_sample - ray_origin;
 
     return ray(ray_origin, ray_direction);
@@ -101,6 +110,11 @@ private:
     // returns the vector to a random point in the [-0.5, -0.5] to [+0.5, +0.5]
     // unit square
     return vec3(random_double() - 0.5, random_double() - 0.5, 0);
+  }
+
+  point3 defocus_disk_sample() const {
+    auto p = random_in_unit_disk();
+    return center + (p[0] * defocus_disk_u) + (p[1] * defocus_disk_v);
   }
 
   color ray_color(const ray &r, int depth, const hittable &world) const {
